@@ -1,0 +1,41 @@
+dnssec.go
+  s_25e644c1c92c57::t_d4659c8df45e97 20-21,43-44,65,85,326,477-489,612-624
+dnssec_keygen.go
+  s_25e644c1c92c57::t_917dc33fb9b164 11-12,43-47,81-87,129-137
+dnssec_keyscan.go
+  s_25e644c1c92c57::t_05958bae6fad15 13-14,72-73,152-175
+dnssec_privkey.go
+  s_25e644c1c92c57::t_ccb6e5cb016aa5 10-11,21-22,77-86
+go.mod
+  s_25e644c1c92c57::t_f3b364f16bcc70 6
+go.sum
+  s_25e644c1c92c57::t_3af8c2830f83a1 1-2
+sig0.go
+  s_25e644c1c92c57::t_ced1ad38b6ae19 11-12,193-200
+sig0_test.go
+  s_892a5792f21eef::t_349f395e5a667f 15,24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ca7c36951dd0aaf012be942e0848bfe7423c18d6",
+  "prompts": {},
+  "sessions": {
+    "s_25e644c1c92c57": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_07ac4128bffeVvuaNVM4zREmOA",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Bas Westerbaan <bas@cloudflare.com>"
+    },
+    "s_892a5792f21eef": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_07b2b5e0bffeo34cIgOX7UHAcR",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Bas Westerbaan <bas@cloudflare.com>"
+    }
+  }
+}
