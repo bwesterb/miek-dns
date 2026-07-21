@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"math/big"
 	"time"
+
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 )
 
 // Sign signs a dns.Msg. It fills the signature with the appropriate data.
@@ -184,6 +186,14 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 		pk := k.publicKeyED25519()
 		if pk != nil {
 			if ed25519.Verify(pk, hashed, sig) {
+				return nil
+			}
+			return ErrSig
+		}
+	case MLDSA44:
+		pk := k.publicKeyMLDSA44()
+		if pk != nil {
+			if mldsa44.Verify(pk, hashed, nil, sig) {
 				return nil
 			}
 			return ErrSig

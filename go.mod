@@ -3,6 +3,7 @@ module github.com/miekg/dns
 go 1.25.0
 
 require (
+	github.com/cloudflare/circl v1.6.4
 	golang.org/x/net v0.56.0
 	golang.org/x/sync v0.21.0
 	golang.org/x/sys v0.46.0

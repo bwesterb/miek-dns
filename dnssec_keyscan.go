@@ -10,6 +10,8 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 )
 
 // NewPrivateKey returns a PrivateKey by parsing the string s.
@@ -67,6 +69,8 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (crypto.PrivateKey, er
 		return priv, nil
 	case ED25519:
 		return readPrivateKeyED25519(m)
+	case MLDSA44:
+		return readPrivateKeyMLDSA44(m)
 	default:
 		return nil, ErrAlg
 	}
@@ -141,6 +145,30 @@ func readPrivateKeyED25519(m map[string]string) (ed25519.PrivateKey, error) {
 		case "created", "publish", "activate":
 			/* not used in Go (yet) */
 		}
+	}
+	return p, nil
+}
+
+func readPrivateKeyMLDSA44(m map[string]string) (*mldsa44.PrivateKey, error) {
+	var p *mldsa44.PrivateKey
+	// TODO: validate that the required flags are present
+	for k, v := range m {
+		switch k {
+		case "privatekey":
+			p1, err := fromBase64([]byte(v))
+			if err != nil {
+				return nil, err
+			}
+			if len(p1) != mldsa44.SeedSize {
+				return nil, ErrPrivKey
+			}
+			_, p = mldsa44.NewKeyFromSeed((*[mldsa44.SeedSize]byte)(p1))
+		case "created", "publish", "activate":
+			/* not used in Go (yet) */
+		}
+	}
+	if p == nil {
+		return nil, ErrPrivKey
 	}
 	return p, nil
 }

@@ -17,6 +17,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -38,6 +40,8 @@ const (
 	ECDSAP384SHA384
 	ED25519
 	ED448
+	_                // Skip 17, unassigned
+	MLDSA44          // draft-westerbaan-dnssec-mldsa
 	INDIRECT   uint8 = 252
 	PRIVATEDNS uint8 = 253 // Private (experimental keys)
 	PRIVATEOID uint8 = 254
@@ -58,6 +62,7 @@ var AlgorithmToString = map[uint8]string{
 	ECDSAP384SHA384:  "ECDSAP384SHA384",
 	ED25519:          "ED25519",
 	ED448:            "ED448",
+	MLDSA44:          "MLDSA44",
 	INDIRECT:         "INDIRECT",
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",
@@ -77,6 +82,7 @@ var AlgorithmToHash = map[uint8]crypto.Hash{
 	ECDSAP384SHA384:  crypto.SHA384,
 	RSASHA512:        crypto.SHA512,
 	ED25519:          0,
+	MLDSA44:          0,
 }
 
 // DNSSEC hashing algorithm codes.
@@ -317,7 +323,7 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 	}
 
 	switch alg {
-	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, ED25519:
+	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, ED25519, MLDSA44:
 		return signature, nil
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		ecdsaSignature := &struct {
@@ -468,6 +474,19 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 		}
 		return ErrSig
 
+	case MLDSA44:
+		pubkey := k.publicKeyMLDSA44()
+		if pubkey == nil {
+			return ErrKey
+		}
+
+		// draft-westerbaan-dnssec-mldsa: "pure" ML-DSA with an empty
+		// context string.
+		if mldsa44.Verify(pubkey, append(signeddata, wire...), nil, sigbuf) {
+			return nil
+		}
+		return ErrSig
+
 	default:
 		return ErrAlg
 	}
@@ -588,6 +607,19 @@ func (k *DNSKEY) publicKeyED25519() ed25519.PublicKey {
 		return nil
 	}
 	return keybuf
+}
+
+func (k *DNSKEY) publicKeyMLDSA44() *mldsa44.PublicKey {
+	keybuf, err := fromBase64([]byte(k.PublicKey))
+	if err != nil {
+		return nil
+	}
+	if len(keybuf) != mldsa44.PublicKeySize {
+		return nil
+	}
+	pk := new(mldsa44.PublicKey)
+	pk.Unpack((*[mldsa44.PublicKeySize]byte)(keybuf))
+	return pk
 }
 
 type wireSlice [][]byte

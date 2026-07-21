@@ -8,6 +8,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"math/big"
+
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 )
 
 // Generate generates a DNSKEY of the given bit size.
@@ -35,6 +37,11 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 			return nil, ErrKeySize
 		}
 	case ED25519:
+		if bits != 256 {
+			return nil, ErrKeySize
+		}
+	case MLDSA44:
+		// ML-DSA-44 keys are generated from a 256-bit (32-octet) seed.
 		if bits != 256 {
 			return nil, ErrKeySize
 		}
@@ -70,6 +77,13 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 			return nil, err
 		}
 		k.setPublicKeyED25519(pub)
+		return priv, nil
+	case MLDSA44:
+		pub, priv, err := mldsa44.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+		k.setPublicKeyMLDSA44(pub)
 		return priv, nil
 	default:
 		return nil, ErrAlg
@@ -109,6 +123,15 @@ func (k *DNSKEY) setPublicKeyED25519(_K ed25519.PublicKey) bool {
 		return false
 	}
 	k.PublicKey = toBase64(_K)
+	return true
+}
+
+// Set the public key for ML-DSA-44
+func (k *DNSKEY) setPublicKeyMLDSA44(_K *mldsa44.PublicKey) bool {
+	if _K == nil {
+		return false
+	}
+	k.PublicKey = toBase64(_K.Bytes())
 	return true
 }
 
